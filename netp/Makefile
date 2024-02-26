@@ -9,10 +9,10 @@ LIB = -lpthread
 all: echoclient echoserver
 
 echoclient: echoclient.c csapp.o
-	$(CC) $(CFLAGS) -o echoclient echoclient.c csapp.o $(LIB)
+	$(CC) $(CFLAGS) -o echoclient.o echoclient.c csapp.o $(LIB)
 
 echoserver: echoserveri.c csapp.o echo.o
-	$(CC) $(CFLAGS) -o echoserver echoserveri.c csapp.o echo.o $(LIB)
+	$(CC) $(CFLAGS) -o echoserver.o echoserveri.c csapp.o echo.o $(LIB)
 
 csapp.o: csapp.c
 	$(CC) $(CFLAGS) -c csapp.c
