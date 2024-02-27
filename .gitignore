@@ -62,9 +62,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# configurations
-*.json
-
 ### CLion ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
@@ -419,9 +416,11 @@ tags
 
 ### VisualStudioCode ###
 .vscode/*
-!.vscode/settings.json
+#!.vscode/settings.json
+!.vscode/settings_default.json
 !.vscode/tasks.json
-!.vscode/launch.json
+#!.vscode/launch.json
+!.vscode/launch_default.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
