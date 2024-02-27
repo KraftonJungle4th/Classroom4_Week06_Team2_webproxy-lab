@@ -416,9 +416,11 @@ tags
 
 ### VisualStudioCode ###
 .vscode/*
-!.vscode/settings.json
+#!.vscode/settings.json
+!.vscode/settings_default.json
 !.vscode/tasks.json
-!.vscode/launch.json
+#!.vscode/launch.json
+!.vscode/launch_default.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
