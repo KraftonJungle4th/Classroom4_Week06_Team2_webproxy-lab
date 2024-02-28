@@ -1,7 +1,6 @@
 /* $begin tinymain */
 /*
- * tiny.c - A simple, iterative HTTP/1.0 Web server that uses the
- *     GET method to serve static and dynamic content.
+ * tiny.c - GET 메서드를 사용하여 정적 및 동적 콘텐츠를 제공하는 간단한 반복형 HTTP/1.0 웹 서버입니다.
  */
 #include "csapp.h"
 
@@ -14,7 +13,8 @@ void serve_dynamic(int fd, char *filename, char *cgiargs);
 void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
 
 /* main - 서버의 메인 함수로, 리스닝 소켓을 열고,
-클라이언트로부터의 연결 요청을 무한히 대기함.*/
+ *         클라이언트로부터의 연결 요청을 무한히 대기함.
+ */
 int main(int argc, char **argv) // argc - 명령줄에 들어온 인자 개수를 저장함, argv - 명령줄 인자를 가리키는 포인터 배열. 포트 번호를 인자로 받음
 {
   int listenfd, connfd;                  // 리스닝 소켓 파일 디스크립터, 연결 소켓 파일 디스크립터
@@ -107,9 +107,9 @@ void read_requesthdrs(rio_t *rp)
 {
   char buf[MAXLINE]; // MAXLINE 길이의 문자열 배열 buf 선언
 
-  Rio_readlineb(rp, buf, MAXLINE); // rp에서 한 줄을
+  Rio_readlineb(rp, buf, MAXLINE); // rp를 통해 한 줄을 읽어 buf에 저장
   while (strcmp(buf, "\r\n"))
-  { // line:netp:readhdrs:checkterm
+  { // 빈 줄을 만날 때까지 읽음
     Rio_readlineb(rp, buf, MAXLINE);
     printf("%s", buf);
   }
@@ -118,41 +118,40 @@ void read_requesthdrs(rio_t *rp)
 /* $end read_requesthdrs */
 
 /*
- * parse_uri - parse URI into filename and CGI args
- *             return 0 if dynamic content, 1 if static
+ * parse_uri - URI를 파일 이름과 CGI의 인자로 파싱함
+ *             0 반환 - 동적 콘텐츠임을 의미
+ *             1 반환 - 정적 콘텐츠임을 의미
  */
 /* $begin parse_uri */
 int parse_uri(char *uri, char *filename, char *cgiargs)
 {
   char *ptr;
-
-  if (!strstr(uri, "cgi-bin")) /* Static content */
-  {                            // line:netp:parseuri:isstatic
-    strcpy(cgiargs, "");       // line:netp:parseuri:clearcgi
-    strcpy(filename, ".");     // line:netp:parseuri:beginconvert1
+  
+  if (!strstr(uri, "cgi-bin")) /* 정적 콘텐츠 */
+  {
+    strcpy(cgiargs, "");
+    strcpy(filename, ".");
 
     // .html 파일 요청을 처리
     if (strstr(uri, ".html"))
     {
       strcat(filename, uri);
     }
-    else if (uri[strlen(uri) - 1] == '/') // line:netp:parseuri:slashcheck
+    else if (uri[strlen(uri) - 1] == '/')
     {
       // URI에 .html이 포함되어 있는 경우
-      strcat(filename, "home.html"); // line:netp:parseuri:appenddefault
+      strcat(filename, "home.html");
     }
     else
     {
       // 다른 정적 콘텐츠 요청 처리
-      strcat(filename, uri); // line:netp:parseuri:endconvert1
+      strcat(filename, uri);
     }
 
     return 1;
   }
 
-  /* Dynamic content */
-  // line:netp:parseuri:isdynamic
-  // line:netp:parseuri:beginextract
+  /* 동적 컨텐츠 */
   ptr = index(uri, '?');
 
   if (ptr)
@@ -162,18 +161,18 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
   }
   else
   {
-    strcpy(cgiargs, ""); // line:netp:parseuri:endextract
+    strcpy(cgiargs, "");
   }
 
-  strcpy(filename, "."); // line:netp:parseuri:beginconvert2
-  strcat(filename, uri); // line:netp:parseuri:endconvert2
+  strcpy(filename, ".");
+  strcat(filename, uri);
 
   return 0;
 }
 /* $end parse_uri */
 
 /*
- * serve_static - copy a file back to the client
+ * serve_static - 클라이언트에게 파일을 복사하여 제공
  */
 /* $begin serve_static */
 void serve_static(int fd, char *filename, int filesize)
@@ -181,24 +180,27 @@ void serve_static(int fd, char *filename, int filesize)
   int srcfd;
   char *srcp, filetype[MAXLINE], buf[MAXBUF];
 
-  /* Send response headers to client */
-  get_filetype(filename, filetype);    // line:netp:servestatic:getfiletype
-  sprintf(buf, "HTTP/1.0 200 OK\r\n"); // line:netp:servestatic:beginserve
+  /* 클라이언트에게 응답 헤더 전송 */
+  get_filetype(filename, filetype);
+  sprintf(buf, "HTTP/1.0 200 OK\r\n");
   sprintf(buf, "%sServer: Tiny Web Server\r\n", buf);
+  sprintf(buf, "%sConnection: close\r\n", buf);
   sprintf(buf, "%sContent-length: %d\r\n", buf, filesize);
   sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, filetype);
-  Rio_writen(fd, buf, strlen(buf)); // line:netp:servestatic:endserve
+  Rio_writen(fd, buf, strlen(buf));
+  printf("Response headers:\n"); // 응답 헤더를 출력
+  printf("%s", buf);
 
-  /* Send response body to client */
-  srcfd = Open(filename, O_RDONLY, 0);                        // line:netp:servestatic:open
-  srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0); // line:netp:servestatic:mmap
-  Close(srcfd);                                               // line:netp:servestatic:close
-  Rio_writen(fd, srcp, filesize);                             // line:netp:servestatic:write
-  Munmap(srcp, filesize);                                     // line:netp:servestatic:munmap
+  /* 클라이언트에게 응답 본문(body) 전송 */
+  srcfd = Open(filename, O_RDONLY, 0);
+  srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
+  Close(srcfd);
+  Rio_writen(fd, srcp, filesize);
+  Munmap(srcp, filesize);
 }
 
 /*
- * get_filetype - derive file type from file name
+ * get_filetype - 파일 이름에서 파일 타입을 도출해내는 함수
  */
 void get_filetype(char *filename, char *filetype)
 {
@@ -214,7 +216,7 @@ void get_filetype(char *filename, char *filetype)
 /* $end serve_static */
 
 /*
- * serve_dynamic - run a CGI program on behalf of the client
+ * serve_dynamic - 클라이언트를 대신하여 CGI 프로그램을 실행하는 함수
  */
 /* $begin serve_dynamic */
 void serve_dynamic(int fd, char *filename, char *cgiargs)
@@ -228,13 +230,13 @@ void serve_dynamic(int fd, char *filename, char *cgiargs)
   Rio_writen(fd, buf, strlen(buf));
 
   if (Fork() == 0)
-  { /* child */ // line:netp:servedynamic:fork
-    /* Real server would set all CGI vars here */
-    setenv("QUERY_STRING", cgiargs, 1);                         // line:netp:servedynamic:setenv
-    Dup2(fd, STDOUT_FILENO); /* Redirect stdout to client */    // line:netp:servedynamic:dup2
-    Execve(filename, emptylist, environ); /* Run CGI program */ // line:netp:servedynamic:execve
+  { // 자식 프로세스 생성
+    // 실제 서버는 모든 CGI 변수를 여기에 설정.
+    setenv("QUERY_STRING", cgiargs, 1);
+    Dup2(fd, STDOUT_FILENO);              // 표준 출력을 연결 소켓으로 리다이렉트
+    Execve(filename, emptylist, environ); // CGI 프로그램 실행
   }
-  Wait(NULL); /* Parent waits for and reaps child */ // line:netp:servedynamic:wait
+  Wait(NULL); // 부모 프로세스는 자식 프로세스가 종료될 때까지 기다림
 }
 /* $end serve_dynamic */
 
