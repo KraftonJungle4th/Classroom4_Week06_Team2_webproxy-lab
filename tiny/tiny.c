@@ -17,23 +17,10 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longms
 클라이언트로부터의 연결 요청을 무한히 대기함.*/
 int main(int argc, char **argv) // argc - 명령줄에 들어온 인자 개수를 저장함, argv - 명령줄 인자를 가리키는 포인터 배열. 포트 번호를 인자로 받음
 {
-  // int listenfd, connfd, port, clientlen; // 리스닝 소켓 파일 디스크립터, 연결 소켓 파일 디스크립터, 서버가 리스닝할 포트 번호, 클라이언트 주소 길이
-  // struct sockaddr_in clientaddr;         // 클라이언트 주소 정보
-
-  // /* 커맨드 라인에 올바른 인자 수가 들어왔는지 확인 */
-  // if (argc != 2) // 포트 번호 하나만을 받으므로, 인자의 개수는 {파일이름} {포트번호} 두개여야 함
-  // {
-  //   fprintf(stderr, "usage: %s <port>\n", argv[0]); // 올바른 사용법을 알려주고 종료함
-  //   exit(1);
-  // }
-  // port = atoi(argv[1]); // 리스닝을 수행할 포트 번호를 port에 저장, ASCII -> int
-
-  // listenfd = Open_listenfd(port); // Open_listenfd 래퍼를 호출하여 지정된 포트에서 연결 요청을 기다리도록 리스닝 소켓을 엶.
-
-  int listenfd, connfd;
-  char hostname[MAXLINE], port[MAXLINE];
-  socklen_t clientlen;
-  struct sockaddr_storage clientaddr;
+  int listenfd, connfd;                  // 리스닝 소켓 파일 디스크립터, 연결 소켓 파일 디스크립터
+  char hostname[MAXLINE], port[MAXLINE]; // hostname과 port를 char형 배열로 받아옴
+  socklen_t clientlen;                   // 클라이언트 주소 길이를 저장할 변수
+  struct sockaddr_storage clientaddr;    // sockaddr_storage 구조체를 이용하여 clientaddr 저장
 
   listenfd = Open_listenfd(argv[1]); // Open_listenfd 래퍼를 호출하여 지정된 포트에서 연결 요청을 기다리도록 리스닝 소켓을 엶.
 
@@ -46,12 +33,12 @@ int main(int argc, char **argv) // argc - 명령줄에 들어온 인자 개수�
 
   while (1) // 무한 루프를 통해 연결 요청을 계속해서 받음
   {
-    clientlen = sizeof(clientaddr);                           // client_addr구조체의 크기 저장
-    connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen); // Accept를 통해 새로운 연결 소켓 생성
-    Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
-    printf("Accepted connection from (%s, %s)\n", hostname, port);
-    doit(connfd);  // connfd를 통해 HTTP 처리
-    Close(connfd); // 처리가 완료되면 연결 connfd를 종료시킴
+    clientlen = sizeof(clientaddr);                                                 // client_addr구조체의 크기 저장
+    connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);                       // Accept를 통해 새로운 연결 소켓 생성
+    Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0); // Getnameinfo를 통해 클라이언트에게 전송하기 위한 클라이언트의 호스트 이름과 포트 번호를 가져옴
+    printf("Accepted connection from (%s, %s)\n", hostname, port);                  // 클라이언트의 호스트 이름과 포트 번호를 출력
+    doit(connfd);                                                                   // connfd를 통해 HTTP 처리
+    Close(connfd);                                                                  // 처리가 완료되면 연결 connfd를 종료시킴
   }
 }
 /* $end tinymain */
