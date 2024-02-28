@@ -219,7 +219,9 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
 void serve_static(int fd, char *filename, int filesize)
 {
   int srcfd;
-  char *srcp, filetype[MAXLINE], buf[MAXBUF];
+  ssize_t read_result;
+  char filetype[MAXLINE], buf[MAXBUF];
+  char *buffer = (char *)malloc(filesize); // 파일 크기만큼의 버퍼를 동적 할당
 
   /* 클라이언트에게 응답 헤더 전송 */
   get_filetype(filename, filetype);
@@ -233,11 +235,22 @@ void serve_static(int fd, char *filename, int filesize)
   printf("%s", buf);
 
   /* 클라이언트에게 응답 본문(body) 전송 */
-  srcfd = Open(filename, O_RDONLY, 0);
-  srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
-  Close(srcfd);
-  Rio_writen(fd, srcp, filesize);
-  Munmap(srcp, filesize);
+  if (buffer == NULL) // 동적 할당에 실패했을 경우 에러 메세지 전송
+  {
+    clienterror(fd, filename, "500", "Internal Server Error", "Tiny couldn't allocate memory");
+    return;
+  }
+
+  srcfd = Open(filename, O_RDONLY, 0);              // Open으로 파일을 열고, 연 파일 디스크립터를 srcfd에 저장
+  read_result = rio_readn(srcfd, buffer, filesize); // 열린 파일에서 데이터를 읽어서 malloc으로 할당된 버퍼에 저장
+  if (read_result < 0)                              // 파일을 읽는데 실패했을 경우 에러 메세지 전송 후 종료
+  {
+    clienterror(fd, filename, "500", "Internal Server Error", "Tiny couldn't read the file");
+    return;
+  }
+  Close(srcfd);                     // 파일을 읽은 후 파일 디스크립터를 닫음 - 메모리 누수 방지
+  Rio_writen(fd, buffer, filesize); // 클라이언트에게 파일 본문을 전송
+  free(buffer);                     // 버퍼에 할당된 메모리도 해제 - 메모리 누수 방지
 }
 
 /*
