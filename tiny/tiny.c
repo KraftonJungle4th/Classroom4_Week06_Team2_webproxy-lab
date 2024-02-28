@@ -62,8 +62,6 @@ void doit(int fd) // 연결을 나타내는 디스크립터
 
   if (strcasecmp(method, "HEAD") == 0)
   {
-    // HEAD 요청 처리
-    char filename[MAXLINE], cgiargs[MAXLINE];
     struct stat sbuf;
 
     // URI 파싱 (파일 이름 추출, CGI 인자 처리)
