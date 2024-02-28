@@ -17,7 +17,7 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longms
 클라이언트로부터의 연결 요청을 무한히 대기함.*/
 int main(int argc, char **argv) // argc - 명령줄에 들어온 인자 개수를 저장함, argv - 명령줄 인자를 가리키는 포인터 배열. 포트 번호를 인자로 받음
 {
-  int listenfd, connfd;                  // 리스닝 소켓 파일 디스크립터, 연결 소켓 파일 디스크립터, 서버가 리스닝할 포트 번호, 클라이언트 주소 길이
+  int listenfd, connfd;                  // 리스닝 소켓 파일 디스크립터, 연결 소켓 파일 디스크립터
   char hostname[MAXLINE], port[MAXLINE]; // hostname과 port를 char형 배열로 받아옴
   socklen_t clientlen;                   // 클라이언트 주소 길이를 저장할 변수
   struct sockaddr_storage clientaddr;    // sockaddr_storage 구조체를 이용하여 clientaddr 저장
@@ -35,7 +35,7 @@ int main(int argc, char **argv) // argc - 명령줄에 들어온 인자 개수�
   {
     clientlen = sizeof(clientaddr);                                                 // client_addr구조체의 크기 저장
     connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);                       // Accept를 통해 새로운 연결 소켓 생성
-    Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0); // 클라이언트에게 전송하기 위해 클라이언트의 호스트 이름과 포트 번호를 가져옴
+    Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0); // Getnameinfo를 통해 클라이언트에게 전송하기 위한 클라이언트의 호스트 이름과 포트 번호를 가져옴
     printf("Accepted connection from (%s, %s)\n", hostname, port);                  // 클라이언트의 호스트 이름과 포트 번호를 출력
     doit(connfd);                                                                   // connfd를 통해 HTTP 처리
     Close(connfd);                                                                  // 처리가 완료되면 연결 connfd를 종료시킴
