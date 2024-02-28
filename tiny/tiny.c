@@ -129,8 +129,8 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
 
   if (!strstr(uri, "cgi-bin")) /* 정적 콘텐츠 */
   {
-    strcpy(cgiargs, "");
-    strcpy(filename, ".");
+    strcpy(cgiargs, "");   // 환경 변수 초기화
+    strcpy(filename, "."); // filename에 .을 복사
 
     // .html 파일 요청을 처리
     if (strstr(uri, ".html"))
@@ -211,6 +211,8 @@ void get_filetype(char *filename, char *filetype)
     strcpy(filetype, "image/gif");
   else if (strstr(filename, ".jpg"))
     strcpy(filetype, "image/jpeg");
+  else if (strstr(filename, ".mp4"))
+    strcpy(filetype, "video/mp4");
   else
     strcpy(filetype, "text/plain");
 }
