@@ -126,7 +126,7 @@ void read_requesthdrs(rio_t *rp)
 int parse_uri(char *uri, char *filename, char *cgiargs)
 {
   char *ptr;
-  
+
   if (!strstr(uri, "cgi-bin")) /* 정적 콘텐츠 */
   {
     strcpy(cgiargs, "");
@@ -135,12 +135,13 @@ int parse_uri(char *uri, char *filename, char *cgiargs)
     // .html 파일 요청을 처리
     if (strstr(uri, ".html"))
     {
+      // URI에 .html이 포함되어 있는 경우
       strcat(filename, uri);
     }
     else if (uri[strlen(uri) - 1] == '/')
     {
-      // URI에 .html이 포함되어 있는 경우
-      strcat(filename, "home.html");
+      // URI가 /로 끝나는 경우. 즉, home.html을 요청하는 경우
+      strcat(filename, "/home.html");
     }
     else
     {
