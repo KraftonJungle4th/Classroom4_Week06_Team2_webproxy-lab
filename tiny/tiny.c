@@ -59,17 +59,40 @@ void doit(int fd) // 연결을 나타내는 디스크립터
   Rio_readinitb(&rio, fd);                       // Rio 읽기 작업 위해 버퍼 초기화
   Rio_readlineb(&rio, buf, MAXLINE);             // Rio 읽기 작업 수행, 한 줄을 읽어옴
   sscanf(buf, "%s %s %s", method, uri, version); // sscanf - 데이터를 읽어서 변수에 저장
-  if (strcasecmp(method, "GET"))                 // 메서드가 GET인지 확인
+
+  if (strcasecmp(method, "HEAD") == 0)
+  {
+    struct stat sbuf;
+
+    // URI 파싱 (파일 이름 추출, CGI 인자 처리)
+    parse_uri(uri, filename, cgiargs);
+
+    // 파일 상태 가져오기
+    if (stat(filename, &sbuf) < 0)
+    {
+      clienterror(fd, filename, "404", "Not found", "Tiny couldn't find this file");
+      return;
+    }
+
+    // 헤더 전송
+    serve_head(fd, filename, &sbuf);
+
+    return;
+  }
+
+  if (strcasecmp(method, "GET")) // 메서드가 GET인지 확인
   {
     clienterror(fd, method, "501", "Not Implemented", // 클라이언트에게 에러 전달
                 "Tiny does not implement this method");
     return;
   }
+
   read_requesthdrs(&rio); // 헤더를 읽긴 하지만 별다른 조치를 취하지 않음
 
   /* GET 요청으로부터 온 uri를 파싱함 */
   is_static = parse_uri(uri, filename, cgiargs); // uri 파싱하여 정적 콘텐츠인지 동적 콘텐츠인지 결정
-  if (stat(filename, &sbuf) < 0)                 // 파일이름을 버퍼에 저장(stat buffer)
+
+  if (stat(filename, &sbuf) < 0) // 파일 이름을 버퍼에 저장(stat buffer)
   {
     clienterror(fd, filename, "404", "Not found",
                 "Tiny couldn't find this file");
@@ -98,6 +121,23 @@ void doit(int fd) // 연결을 나타내는 디스크립터
   }
 }
 /* $end doit */
+
+void serve_head(int fd, char *filename, struct stat *sbuf)
+{
+  char filetype[MAXLINE], buf[MAXBUF];
+
+  // 파일 타입 확인
+  get_filetype(filename, filetype);
+
+  // 응답 헤더 구성
+  sprintf(buf, "HTTP/1.0 200 OK\r\n");
+  sprintf(buf, "%sServer: Tiny Web Server\r\n", buf);
+  sprintf(buf, "%sContent-length: %d\r\n", buf, (int)sbuf->st_size);
+  sprintf(buf, "%sContent-type: %s\r\n\r\n", buf, filetype);
+
+  // 헤더 전송
+  Rio_writen(fd, buf, strlen(buf));
+}
 
 /*
  * read_requesthdrs - HTTP 요청 헤더를 읽고, 파싱함
